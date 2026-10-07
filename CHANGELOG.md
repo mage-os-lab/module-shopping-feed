@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented here.
 
+## Unreleased
+
+### Fixed
+
+- Show the installed Composer package version in Admin's **Versions installed** field instead of the database schema version. Preserve the schema-version fallback for source installations and related modules (#17).
+
 ## 1.2.2 - 2026-10-05
 
 [Release 1.2.2 notes and upgrade requirements](docs/releases/1.2.2.md).
