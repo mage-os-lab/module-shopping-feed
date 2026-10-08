@@ -4,6 +4,10 @@ The repository validates module identity, configuration integrity, PHP behavior,
 
 > Documentation baseline: release 1.2.2 (`v1.2.2`); earlier acceptance is identified by version. Last reviewed: 2026-10-05.
 
+## Unreleased Mage-OS 3.5.0 hardening
+
+The prepared CI matrix now targets Mage-OS 3.5.0. The repository's `docs/reviews/2026-10-08-hardening-and-mageos-3.5-verification.md` records the isolated installation, regression tests, native feed checks, and remaining limits for the local changes. The published 1.2.2 package and its CI results remain separate from this work.
+
 ## 1.2.2 patch verification
 
 The #14 description correction adds 17 cases. The core suite passes 863 tests on PHPUnit 9, 10, and 12, and 47 JavaScript checks pass. The merged runtime passed all 25 [post-merge CI jobs](https://github.com/mage-os-lab/module-shopping-feed/actions/runs/37332361658). See [Release 1.2.2](Release-1-2-2) and the dated release preparation record in the repository. Earlier store/browser results below keep their original scope.
@@ -60,11 +64,11 @@ The GitHub Actions workflow runs:
 * Consolidated module and wiki validation
 * Hyva and Luma storefront auto-selection checks
 * Magento Open Source compatibility checks
-* Mage-OS 3.4.0 compatibility checks
+* Mage-OS 3.5.0 compatibility checks in the unreleased configuration
 
 The exact supported PHP constraint remains authoritative in `composer.json`. The current [Status and compatibility](Status-and-Compatibility) page translates that metadata for users.
 
-The earlier Google/custom-feed acceptance profile on Mage-OS 3.5.0 passed 413 unit tests with 955 assertions, 10 application integration tests with 26 assertions, 14 frontend tests, and 33 generation checks. See [Release 1.1.0](Release-1-1-0) for the separate earlier Nebula, no-Nebula, and storefront runs. PHPUnit 9, 10, and 12 use the same data-provider coverage; compatibility fixtures explicitly configure optional arguments and date modification. The follow-up issue review passed 433 unit tests, 19 JavaScript tests, and 42 feed/stock checks and is recorded in the [issue acceptance report](https://github.com/mage-os-lab/module-shopping-feed/blob/v1.1.0/docs/reviews/2026-09-28-github-issues.md). These local results do not add Mage-OS 3.5.0 to the CI matrix or replace recipient acceptance. Use the [CI run history](https://github.com/mage-os-lab/module-shopping-feed/actions/workflows/ci.yml) for the status of the exact release commit.
+The earlier Google/custom-feed acceptance profile on Mage-OS 3.5.0 passed 413 unit tests with 955 assertions, 10 application integration tests with 26 assertions, 14 frontend tests, and 33 generation checks. See [Release 1.1.0](Release-1-1-0) for the separate earlier Nebula, no-Nebula, and storefront runs. PHPUnit 9, 10, and 12 use the same data-provider coverage; compatibility fixtures explicitly configure optional arguments and date modification. The follow-up issue review passed 433 unit tests, 19 JavaScript tests, and 42 feed/stock checks and is recorded in the [issue acceptance report](https://github.com/mage-os-lab/module-shopping-feed/blob/v1.1.0/docs/reviews/2026-09-28-github-issues.md). Those historical local results do not establish CI or recipient acceptance for the unreleased changes. Use the [CI run history](https://github.com/mage-os-lab/module-shopping-feed/actions/workflows/ci.yml) for the status of the exact release commit.
 
 ## Documentation changes
 

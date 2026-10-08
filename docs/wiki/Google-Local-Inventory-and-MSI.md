@@ -4,6 +4,8 @@ Google Local Inventory output connects a product ID with store-level availabilit
 
 > Documentation baseline: release 1.2.1 (`v1.2.1`); earlier acceptance is identified by version. Last reviewed: 2026-10-04.
 
+The source and reservation corrections below describe the unreleased hardening changes reviewed on 2026-10-08. See `docs/reviews/2026-10-08-hardening-and-mageos-3.5-verification.md` for the Mage-OS 3.5.0 evidence. Published 1.2.2 behavior still deducts reservations per source and needs this correction before relying on those quantities.
+
 ## Prerequisites
 
 * A working Google Shopping product feed whose product IDs align with Local Inventory IDs
@@ -44,7 +46,7 @@ Unmapped sources use the Magento source code. That fallback is deterministic, bu
 When default stock handling and MSI are active, the module:
 
 1. Resolves the stock for the selected website.
-2. Finds sources linked to that stock.
+2. Finds enabled sources linked to that stock.
 3. Loads source items for the current SKU. In version 1.2.0, configurable parent rows use distinct linked sources from their children; the parent does not need its own source item.
 4. Produces source-specific values for store code, quantity, and availability.
 
@@ -54,7 +56,7 @@ Without source-level MSI context, the mapper falls back to a `default` or `custo
 
 ## Local availability
 
-Online backorders do not establish stock in a physical store. Source rows report `in_stock` only when the source item is enabled and its quantity after configured reservations is positive; otherwise they report `out_of_stock`. Online backorder settings and disabled stock management do not override an empty or disabled source. Without source context, an online `backorder` or `preorder` result becomes `out_of_stock`.
+Online backorders do not establish stock in a physical store. Source rows report `in_stock` only when the source and source item are enabled and the physical source quantity is positive; otherwise they report `out_of_stock`. Online backorder settings and disabled stock management do not override an empty or disabled source. Without source context, an online `backorder` or `preorder` result becomes `out_of_stock`.
 
 Configurable and grouped parent rows continue to use associated-product quantities; an online parent backorder flag no longer overrides their local quantity. The configurable-parent correction in 1.2.0 also requires an enabled child source item at the same source before reporting the parent in stock. Test parent and child modes against your physical inventory before enabling uploads.
 
@@ -62,7 +64,9 @@ Google also accepts `limited_availability` and `on_display_to_order`. The defaul
 
 ## Reservations
 
-**Use Stock Reservations** is enabled by default for Local Inventory. The module adds matching reservation quantities to the source quantity and does not emit a negative result.
+MSI reservations belong to a website stock and do not identify a physical source. Source-specific Local Inventory rows therefore report physical quantities without deducting the website reservation from each source.
+
+**Use Stock Reservations** applies to aggregate inventory quantities, including the fallback when there is no source context. The module adds the reservation total for the feed website's stock once after summing eligible sources, and clamps a negative result to zero. The existing Local Inventory default remains enabled, but does not change physical-source rows.
 
 Record the physical source quantity, reservation total, expected feed quantity, and expected availability for each test SKU. Reservation behavior must be proven with real fixtures before production use.
 
@@ -87,6 +91,8 @@ Use at least two enabled sources and one reservation. Confirm:
 * Each source is linked to the selected website stock.
 * Every source maps to the intended Google store code.
 * Quantity and availability come from the same source context.
+* A stock reservation changes the aggregate quantity once and leaves each physical-source quantity unchanged.
+* Disabled physical sources do not produce rows.
 * Product IDs match the primary Google Shopping feed.
 * A SKU/store-code pair is not duplicated.
 * Merchant Center accepts a non-serving test file.

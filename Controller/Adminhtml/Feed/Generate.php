@@ -77,7 +77,12 @@ class Generate extends \Magento\Backend\App\Action implements HttpPostActionInte
      */
     public function execute()
     {
-        $feed = $this->feedBuilder->build($this->getRequest()->getParams());
+        try {
+            $feed = $this->feedBuilder->build($this->getRequest()->getParams());
+        } catch (\Magento\Framework\Exception\LocalizedException $exception) {
+            $this->messageManager->addErrorMessage($exception->getMessage());
+            return $this->resultRedirectFactory->create()->setPath('*/*/index');
+        }
 
         if (!$feed->getId()) {
             $this->messageManager->addError(__('Feed wasn\'t found'));

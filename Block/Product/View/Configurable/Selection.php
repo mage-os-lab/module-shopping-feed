@@ -70,6 +70,15 @@ class Selection extends \Magento\ConfigurableProduct\Block\Product\View\Type\Con
         );
     }
 
+    /** Encode the core configuration for an inline script without changing its object/array shape. */
+    public function getScriptJsonConfig(): string
+    {
+        return json_encode(
+            json_decode($this->getJsonConfig(), false, 512, JSON_THROW_ON_ERROR),
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR
+        );
+    }
+
     /**
      * @return array
      */

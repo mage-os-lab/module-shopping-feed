@@ -13,7 +13,7 @@ class NebulaDefinition
         if (($result['id'] ?? '') === 'mageos_shopping_feed_grid') {
             $result['settings']['massActions'] = array_values(array_filter(
                 $result['settings']['massActions'] ?? [],
-                fn (array $action): bool => $this->authorization->isAllowed($action['acl'])
+                fn (array $action): bool => !empty($action['acl']) && $this->authorization->isAllowed($action['acl'])
             ));
             foreach ($result['settings']['massActions'] as &$action) {
                 $action['url'] = $subject->getUrl($action['url']);

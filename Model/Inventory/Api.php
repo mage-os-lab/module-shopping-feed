@@ -65,8 +65,11 @@ class Api
         $sourceCodes = [];
         $searchCriteria = $this->searchCriteriaBuilder->addFilter('stock_id', $stockId)->create();
         $stockLinks = $this->objectManager->create('Magento\InventoryApi\Api\GetStockSourceLinksInterface');
+        $sourceRepository = $this->objectManager->create('Magento\InventoryApi\Api\SourceRepositoryInterface');
         foreach ($stockLinks->execute($searchCriteria)->getItems() as $link) {
-            $sourceCodes[] = $link->getSourceCode();
+            if ($sourceRepository->get($link->getSourceCode())->isEnabled()) {
+                $sourceCodes[] = $link->getSourceCode();
+            }
         }
 
         $items = [];
@@ -98,24 +101,33 @@ class Api
     /**
      * @param  string $sku
      * @param  string $sourceCode
+     * @param  string|null $websiteCode Resolve reservations for the feed's website stock.
      * @return float|int
      */
-    public function getReservations(string $sku, ?string $sourceCode = null)
+    public function getReservations(string $sku, ?string $sourceCode = null, ?string $websiteCode = null)
     {
+        if (!$this->isMsiEnabled()) {
+            return 0;
+        }
         $connection = $this->resourceConnection->getConnection();
         $reservationTable = $this->resourceConnection->getTableName('inventory_reservation');
         $select = $connection->select()
             ->from($reservationTable, ['quantity' => 'SUM(quantity)'])
-            ->where('sku = ?', $sku)
-            ->where(sprintf("metadata LIKE '%s'", '%"object_type":"order"%'));
+            ->where('sku = ?', $sku);
 
-        if ($sourceCode != null && $this->isMsiEnabled()) {
+        if ($websiteCode !== null) {
+            $resolver = $this->objectManager->create('Magento\InventorySalesApi\Api\StockResolverInterface');
+            $stockId = (int)$resolver->execute('website', $websiteCode)->getStockId();
+            $select->where('stock_id = ?', $stockId);
+        } elseif ($sourceCode !== null) {
             $inventoryTableName = $this->resourceConnection->getTableName('inventory_source_stock_link');
             $sourceSelect = $connection->select()->from($inventoryTableName, ['stock_id'])
                 ->where('source_code = ?', $sourceCode);
             $stockId = $connection->fetchOne($sourceSelect);
             if ($stockId) {
                 $select->where("stock_id = ?", $stockId);
+            } else {
+                return 0;
             }
         }
 

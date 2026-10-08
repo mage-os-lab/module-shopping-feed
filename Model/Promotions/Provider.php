@@ -66,6 +66,9 @@ class Provider
      */
     protected $hashCacheKey = null;
 
+    private bool $promotionCacheDirty = false;
+    private int $cacheBatchDepth = 0;
+
     /**
      * @var bool
      */
@@ -101,6 +104,10 @@ class Provider
      */
     public function setFeed(\MageOS\ShoppingFeed\Model\Feed $feed)
     {
+        if ($this->feed === $feed) {
+            return $this;
+        }
+        $this->flushPromotionCache();
         $this->feed = $feed;
         $this->hashCache = null;
         $this->hashCacheKey = null;
@@ -199,8 +206,7 @@ class Provider
     }
 
     /**
-     * Setter method which also writes to file cache
-     * This is used so we have a constant cache over all the tests & shopping feed generations
+     * Retain results in memory; full generations write the file once per batch.
      *
      * @param int $productId
      * @param string $hash
@@ -215,13 +221,40 @@ class Provider
         // Update current cache
         $this->hashCache = $cache;
         $this->hashCacheKey = $hash;
+        $this->promotionCacheDirty = true;
+        if ($this->cacheBatchDepth === 0) {
+            $this->flushPromotionCache();
+        }
+        return $this;
+    }
+
+    public function beginCacheBatch(): void
+    {
+        $this->cacheBatchDepth++;
+    }
+
+    public function endCacheBatch(): void
+    {
+        if ($this->cacheBatchDepth > 0) {
+            $this->cacheBatchDepth--;
+        }
+        if ($this->cacheBatchDepth === 0) {
+            $this->flushPromotionCache();
+        }
+    }
+
+    public function flushPromotionCache(): void
+    {
+        if (!$this->promotionCacheDirty) {
+            return;
+        }
 
         // Update file cache without exposing readers to a partially-written JSON document.
         $cacheFile = $this->getHashFile();
         $temporaryFile = $cacheFile . '.' . getmypid() . '.tmp';
         $fileContent = [
-            'cache' => $cache,
-            'hash' => $hash
+            'cache' => $this->hashCache,
+            'hash' => $this->hashCacheKey
         ];
         $this->fileDriver->createDirectory(dirname($cacheFile));
         if ($this->fileDriver->isExists($temporaryFile)) {
@@ -238,7 +271,7 @@ class Provider
             throw $exception;
         }
 
-        return $this;
+        $this->promotionCacheDirty = false;
     }
 
     /**
@@ -255,6 +288,7 @@ class Provider
         }
         $this->hashCache = null;
         $this->hashCacheKey = null;
+        $this->promotionCacheDirty = false;
         return $this;
     }
 
@@ -372,9 +406,12 @@ class Provider
             && count($config['promotion']) > 0
         ) {
             foreach ($config['promotion'] as $k => $row) {
-                if (isset($row['include'])) {
+                if (!empty($row['include'])) {
                     $activeIds[] = $k;
                 }
+            }
+            if (!$activeIds) {
+                return [];
             }
 
             $ids = $this->getPromotionCache($productId, $config['hash']);

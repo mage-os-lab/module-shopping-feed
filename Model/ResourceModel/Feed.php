@@ -64,11 +64,12 @@ class Feed extends AbstractDb
     /**
      * Feed has no edited changes, don't update this field.
      *
+     * @param bool $suppress
      * @return $this
      */
-    public function unsUpdatedAt()
+    public function unsUpdatedAt(bool $suppress = true)
     {
-        $this->unsUpdatedAt = true;
+        $this->unsUpdatedAt = $suppress;
 
         return $this;
     }

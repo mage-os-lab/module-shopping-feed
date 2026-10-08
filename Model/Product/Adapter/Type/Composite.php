@@ -184,10 +184,6 @@ class Composite extends AdapterAbstract
             $rows[] = $fields;
         }
 
-        if (!$this->checkEmptyColumns($rows)) {
-            $rows = [];
-        }
-
         if ($mapAssociatedProducts && in_array($associatedMode, $this->allowed_assoc)) {
             $rows = array_merge($rows, $this->mapAssociatedProducts($checkDuplicates));
         }
@@ -202,7 +198,7 @@ class Composite extends AdapterAbstract
         }
 
         // Set skipped data locally instead of Generator
-        if (in_array($reason, $this->skippedData)) {
+        if (isset($this->skippedData[$reason])) {
             array_push($this->skippedData[$reason], $productId);
         } else {
             $this->skippedData[$reason] = [$productId];
@@ -381,6 +377,8 @@ class Composite extends AdapterAbstract
                 $value = $this->getMapValue($column);
             }
             break;
+        default:
+            throw new \Magento\Framework\Exception\LocalizedException(__('Unknown product inheritance mode.'));
         }
         return $value;
     }

@@ -82,4 +82,20 @@ class SelectionTest extends TestCase
     {
         $this->assertSame($this->products, $this->block->getProducts());
     }
+
+    public function testInlineConfigurationCannotCloseItsScriptElement(): void
+    {
+        $config = (object) [
+            'label' => '</ScRiPt><img src=x onerror=alert(1)> & "quoted"',
+            'options' => (object) [],
+            'prices' => ['0' => 12.5],
+        ];
+        $block = $this->getMockBuilder(Selection::class)->disableOriginalConstructor()
+            ->onlyMethods(['getJsonConfig'])->getMock();
+        $block->method('getJsonConfig')->willReturn(json_encode($config, JSON_UNESCAPED_SLASHES));
+        $encoded = $block->getScriptJsonConfig();
+        self::assertStringNotContainsString('<', $encoded);
+        self::assertStringNotContainsString('>', $encoded);
+        self::assertEquals($config, json_decode($encoded));
+    }
 }

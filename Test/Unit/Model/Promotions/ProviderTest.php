@@ -20,6 +20,74 @@ use PHPUnit\Framework\Attributes\DataProvider;
 #[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class ProviderTest extends TestCase
 {
+    public function testExcludedPromotionRulesAreNeverLookedUpOrReferenced(): void
+    {
+        $feed = $this->createMock(\MageOS\ShoppingFeed\Model\Feed::class);
+        $feed->method('getConfig')->willReturnCallback(static fn ($key) => $key === 'promotions_enabled'
+            ? true : ['hash' => 'test', 'counter' => 1,
+                'promotion' => [12 => ['include' => 0], 34 => ['include' => false]]]);
+        $collection = $this->createMock(Collection::class);
+        $collection->expects(self::never())->method('getPromotionRules');
+        $provider = $this->getMockBuilder(Provider::class)->disableOriginalConstructor()
+            ->onlyMethods(['getPromotionCache'])->getMock();
+        $provider->method('getPromotionCache')->willReturn(false);
+        (new \ReflectionProperty($provider, 'promotionsCollection'))->setValue($provider, $collection);
+        (new \ReflectionProperty($provider, 'map'))->setValue($provider, $this->createMock(Map::class));
+        $provider->setFeed($feed);
+        self::assertSame([], $provider->getPromotionIds($this->createMock(\Magento\Catalog\Model\Product::class)));
+    }
+
+    public function testAssigningTheSameFeedDoesNotDiscardTheWarmCache(): void
+    {
+        $directories = $this->createMock(DirectoryList::class);
+        $directories->method('getPath')->willReturn('/magento/var');
+        $helper = $this->createMock(JsonHelper::class);
+        $helper->method('jsonDecode')->willReturnCallback(static fn ($data) => json_decode($data, true));
+        $driver = $this->createMock(File::class);
+        $driver->method('isExists')->willReturn(true);
+        $driver->method('isReadable')->willReturn(true);
+        $driver->expects(self::once())->method('fileGetContents')
+            ->willReturn('{"hash":"hash","cache":{"42":["PROMO"]}}');
+        $provider = $this->createProvider($helper, $directories, $driver);
+        $feed = $this->createMock(\MageOS\ShoppingFeed\Model\Feed::class);
+        $method = new \ReflectionMethod($provider, 'getPromotionCache');
+        $provider->setFeed($feed);
+        self::assertSame(['PROMO'], $method->invoke($provider, 42, 'hash'));
+        $provider->setFeed($feed);
+        self::assertSame(['PROMO'], $method->invoke($provider, 42, 'hash'));
+    }
+
+    public function testGenerationBatchesCacheWritesAndKeepsEveryProduct(): void
+    {
+        $directories = $this->createMock(DirectoryList::class);
+        $directories->method('getPath')->willReturn('/magento/var');
+        $helper = $this->createMock(JsonHelper::class);
+        $helper->method('jsonEncode')->willReturnCallback(static fn ($data) => json_encode($data));
+        $driver = $this->createMock(File::class);
+        $driver->method('isExists')->willReturn(false);
+        $driver->expects(self::once())->method('filePutContents')->willReturnCallback(
+            function ($path, $contents) {
+                $cache = json_decode($contents, true);
+                self::assertCount(100, $cache['cache']);
+                self::assertSame(['PROMO-1'], $cache['cache'][1]);
+                self::assertSame(['PROMO-100'], $cache['cache'][100]);
+                return strlen($contents);
+            }
+        );
+        $driver->expects(self::once())->method('rename');
+        $provider = $this->createProvider($helper, $directories, $driver);
+        $feed = $this->createMock(\MageOS\ShoppingFeed\Model\Feed::class);
+        $provider->setFeed($feed);
+        $method = new \ReflectionMethod($provider, 'setPromotionCache');
+        $provider->beginCacheBatch();
+        for ($id = 1; $id <= 100; $id++) {
+            $provider->setFeed($feed);
+            $method->invoke($provider, $id, 'hash', ['PROMO-' . $id]);
+        }
+        $provider->endCacheBatch();
+        $provider->flushPromotionCache();
+    }
+
     /** @dataProvider malformedWidgetConfiguration */
     #[DataProvider('malformedWidgetConfiguration')]
     public function testMalformedWidgetConfigurationDoesNotBreakRuleValidation($config): void

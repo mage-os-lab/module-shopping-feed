@@ -207,7 +207,7 @@ class Generator implements ObserverInterface
         return [
             $map->mapPromotionId($counter, $rule),
             $map->mapProductApplicability($rule),
-            $row['title'],
+            trim(preg_replace('/[\t\r\n ]+/', ' ', (string)($row['title'] ?? $rule->getName()))),
             $map->mapEffectiveDates($row),
             $map->mapDisplayDates($row),
             'online',

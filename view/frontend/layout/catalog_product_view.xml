@@ -1,18 +1,6 @@
 <?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
-        <!-- Remove microdata tag from title -->
-        <referenceBlock name="page.main.title">
-            <action method="setAddBaseAttribute" ifconfig="mageos_shopping_feed/google/microdata_enabled">
-                <argument xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="text" xsi:type="string"></argument>
-            </action>
-        </referenceBlock>
-        <!-- Remove microdata tag from sku -->
-        <referenceBlock name="product.info.sku">
-            <action method="setAddAttribute" ifconfig="mageos_shopping_feed/google/microdata_enabled">
-                <argument xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="text" xsi:type="string"></argument>
-            </action>
-        </referenceBlock>
         <referenceContainer name="product.info.main">
             <block name="mageos.shopping_feed.product.microdata" class="MageOS\ShoppingFeed\Block\Product\View\Microdata" before="-" template="microdata.phtml" />
         </referenceContainer>

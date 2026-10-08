@@ -61,13 +61,25 @@ class MicrodataRemoverPlugin
      * @param $interceptedFileName
      * @return array
      */
-    public function beforeFetchView(\Magento\Framework\Pricing\Render\Amount $subject, $interceptedFileName)
+    public function beforeFetchView(\Magento\Framework\View\Element\Template $subject, $interceptedFileName)
     {
-        if ($this->isEnabled()) {
+        if ($subject instanceof \Magento\Framework\Pricing\Render\Amount && $this->isEnabled()) {
             $subject->setData('schema', false);
         }
 
         return [$interceptedFileName];
+    }
+
+    /** Remove native title/SKU attributes only when the current store has a replacement feed. */
+    public function beforeToHtml(\Magento\Framework\View\Element\AbstractBlock $subject): void
+    {
+        $attribute = [
+            'page.main.title' => 'add_base_attribute',
+            'product.info.sku' => 'add_attribute',
+        ][$subject->getNameInLayout()] ?? null;
+        if ($attribute !== null && $this->isEnabled()) {
+            $subject->setData($attribute, '');
+        }
     }
 
     /**

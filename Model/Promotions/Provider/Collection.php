@@ -10,7 +10,7 @@ class Collection
     protected $storeManager;
 
     /**
-     * @var \MageOS\ShoppingFeed\Model\ResourceModel\Feed\ConfigFactory
+     * @var \MageOS\ShoppingFeed\Model\Feed\ConfigFactory
      */
     protected $configFactory;
 
@@ -35,7 +35,7 @@ class Collection
     public function __construct(
         \Magento\SalesRule\Model\ResourceModel\Rule\Quote\CollectionFactory $ruleQuoteCollectionFactory,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \MageOS\ShoppingFeed\Model\ResourceModel\Feed\ConfigFactory $configFactory,
+        \MageOS\ShoppingFeed\Model\Feed\ConfigFactory $configFactory,
         \MageOS\ShoppingFeed\Model\ResourceModel\Feed\Config\CollectionFactory $configCollectionFactory,
         \Magento\Framework\App\ResourceConnection $resourceConnection
     ) {

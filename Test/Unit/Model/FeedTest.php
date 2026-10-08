@@ -103,6 +103,88 @@ class FeedTest extends ModelFramework
         self::assertSame($columns, $this->feed->getConfig()->getData('columns_product_columns'));
     }
 
+    public function testConstructorFeedTypeInitializesItsConfig(): void
+    {
+        $this->feedTypesConfigMock->method('getFeed')->with('generic')->willReturn([
+            'default_feed_config' => ['general' => ['currency' => 'USD']]
+        ]);
+        $feed = $this->objectManagerHelper->getObject(\MageOS\ShoppingFeed\Model\Feed::class, [
+            'context' => $this->contextMock,
+            'registry' => $this->registryMock,
+            'resource' => $this->resource,
+            'resourceCollection' => $this->resourceCollection,
+            'feedTypesConfig' => $this->feedTypesConfigMock,
+            'feedType' => 'generic'
+        ]);
+
+        self::assertSame('generic', $feed->getType());
+        self::assertSame('USD', $feed->getConfig('general_currency'));
+    }
+
+    /** @dataProvider stateSaveCases */
+    #[DataProvider('stateSaveCases')]
+    public function testStateSaveRestoresConfigurationFlag(string $method, $value, bool $fails): void
+    {
+        $resource = $this->getMockBuilder(\MageOS\ShoppingFeed\Model\ResourceModel\Feed::class)
+            ->disableOriginalConstructor()->getMock();
+        $suppression = [];
+        $resource->method('unsUpdatedAt')->willReturnCallback(
+            static function ($suppress = true) use ($resource, &$suppression) {
+                $suppression[] = $suppress;
+                return $resource;
+            }
+        );
+        $resource->expects(self::once())->method('save')->willReturnCallback(
+            static function ($feed) use ($resource, $fails) {
+                self::assertTrue($feed->getData('no_after_save'));
+                if ($fails) {
+                    throw new \RuntimeException('Synthetic database failure');
+                }
+                return $resource;
+            }
+        );
+        $feed = $this->objectManagerHelper->getObject(\MageOS\ShoppingFeed\Model\Feed::class, [
+            'context' => $this->contextMock, 'registry' => $this->registryMock, 'resource' => $resource,
+            'resourceCollection' => $this->resourceCollection, 'serializer' => $this->serializer
+        ]);
+        try {
+            $feed->$method($value);
+            self::assertFalse($fails);
+        } catch (\RuntimeException $exception) {
+            self::assertTrue($fails);
+            self::assertSame('Synthetic database failure', $exception->getMessage());
+        }
+        self::assertFalse((bool)$feed->getData('no_after_save'));
+        self::assertSame($method === 'saveStatus' ? [true, false] : [], $suppression);
+    }
+
+    public static function stateSaveCases(): array
+    {
+        return [
+            ['saveStatus', 0, false], ['saveStatus', 0, true],
+            ['saveMessages', ['exported' => 2], false], ['saveMessages', ['exported' => 2], true],
+        ];
+    }
+
+    public function testResourceTimestampSuppressionCanBeReset(): void
+    {
+        $resource = (new \ReflectionClass(\MageOS\ShoppingFeed\Model\ResourceModel\Feed::class))
+            ->newInstanceWithoutConstructor();
+        $date = $this->createMock(\Magento\Framework\Stdlib\DateTime\DateTime::class);
+        $date->expects(self::once())->method('gmtDate')->willReturn('2026-10-08 12:00:00');
+        (new \ReflectionProperty($resource, 'date'))->setValue($resource, $date);
+        $beforeSave = new \ReflectionMethod($resource, '_beforeSave');
+        $this->feed->setIdFieldName('id');
+        $this->feed->setUpdatedAt('2000-01-01 00:00:00');
+        $resource->unsUpdatedAt();
+        $beforeSave->invoke($resource, $this->feed);
+        self::assertSame('2000-01-01 00:00:00', $this->feed->getUpdatedAt());
+
+        $resource->unsUpdatedAt(false);
+        $beforeSave->invoke($resource, $this->feed);
+        self::assertSame('2026-10-08 12:00:00', $this->feed->getUpdatedAt());
+    }
+
     /** @dataProvider invalidHeaderNames */
     #[DataProvider('invalidHeaderNames')]
     public function testRejectsHeaderControlCharactersAtTheModelSaveBoundary(string $name): void

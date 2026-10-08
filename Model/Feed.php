@@ -202,7 +202,7 @@ class Feed extends AbstractModel
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
 
         if (!empty($feedType)) {
-            $this->setDefaultConfig($feedType);
+            $this->setType($feedType);
         }
     }
 
@@ -322,16 +322,21 @@ class Feed extends AbstractModel
      */
     public function saveMessages($value)
     {
+        $skipConfigSave = $this->getData('no_after_save');
         $this->setData('no_after_save', true);
-        $messages = $this->getMessages();
-        if (!$messages) {
-            $messages = [];
-        }
-        $data = array_merge($messages, $value);
-        $this->setData('messages', $data);
+        try {
+            $messages = $this->getMessages();
+            if (!$messages) {
+                $messages = [];
+            }
+            $data = array_merge($messages, $value);
+            $this->setData('messages', $data);
 
-        $this->beforeSave();
-        $this->getResource()->save($this);
+            $this->beforeSave();
+            $this->getResource()->save($this);
+        } finally {
+            $this->setData('no_after_save', $skipConfigSave);
+        }
         return $this;
     }
 
@@ -343,13 +348,16 @@ class Feed extends AbstractModel
      */
     public function saveStatus($status)
     {
+        $skipConfigSave = $this->getData('no_after_save');
         $this->setData('no_after_save', true);
-        $this->setStatus($status);
-        $this->beforeSave();
-
-        $this->getResource()->unsUpdatedAt()
-            ->save($this);
-
+        try {
+            $this->setStatus($status);
+            $this->beforeSave();
+            $this->getResource()->unsUpdatedAt()->save($this);
+        } finally {
+            $this->getResource()->unsUpdatedAt(false);
+            $this->setData('no_after_save', $skipConfigSave);
+        }
         return $this;
     }
 

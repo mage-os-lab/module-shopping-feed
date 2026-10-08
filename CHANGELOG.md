@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented here.
 
+## Unreleased
+
+### Fixed
+
+- Apply MSI reservations once to the selected website stock, preserve fractional quantities, and exclude disabled sources. Local Inventory rows report physical-source stock without assigning website reservations to each store.
+- Preserve native title and SKU microdata when no replacement feed is selected, and HEX-encode configurable JSON embedded in scripts.
+- Select configurable URL options after Magento finishes initializing dropdowns or swatches, including query-string deep links.
+- Checkpoint manual feeds without schedules when switching automatically to batch mode, retain every skipped product ID, and reject unknown inheritance modes with a clear error.
+- Recover from malformed Generate/View Log identities and hide Nebula actions without an ACL resource.
+- Persist new promotion configuration through its model, buffer promotion cache writes per generation batch, respect excluded rules, and normalize promotion titles for TSV output.
+- Initialize feed configuration when a feed type is passed to the constructor, restore configuration and timestamp saving after status/message updates, remove unfinished markup fragments, and remove a redundant empty-column check.
+
+### Compatibility
+
+- Prepare the explicit Mage-OS 3.5.0 CI target and document the local verification in the [hardening review](docs/reviews/2026-10-08-hardening-and-mageos-3.5-verification.md). Remote CI and publication remain separate states.
+
 ## 1.2.2 - 2026-10-05
 
 [Release 1.2.2 notes and upgrade requirements](docs/releases/1.2.2.md).

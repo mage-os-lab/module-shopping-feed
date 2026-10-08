@@ -59,6 +59,13 @@ define([
         registerEvents: function () {
             var self = this;
 
+            // Magento may populate options after this module's DOM-ready callback.
+            $('#product_addtocart_form').on(
+                'configurable.initialized.mageosShoppingFeed swatch.initialized.mageosShoppingFeed',
+                function () {
+                    self.selectUrlOptions();
+                }
+            );
             $('.super-attribute-select').on('change.mageosShoppingFeed', function () {
                 self.update();
             });

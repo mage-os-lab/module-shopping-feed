@@ -7,6 +7,20 @@ use PHPUnit\Framework\TestCase;
 
 class NebulaDefinitionTest extends TestCase
 {
+    public function testThirdPartyMassActionWithoutAclIsOmitted(): void
+    {
+        $authorization = $this->createMock(\Magento\Framework\AuthorizationInterface::class);
+        $authorization->expects(self::never())->method('isAllowed');
+        $subject = $this->createMock(\Magento\Framework\View\Element\Template::class);
+        $subject->expects(self::never())->method('getUrl');
+        $definition = ['id' => 'mageos_shopping_feed_grid', 'settings' => ['massActions' => [
+            ['label' => 'Unscoped', 'url' => 'thirdparty/action'],
+            ['label' => 'Empty ACL', 'url' => 'thirdparty/action', 'acl' => ''],
+        ]]];
+        $result = (new NebulaDefinition($authorization))->afterGetDefinition($subject, $definition);
+        self::assertSame([], $result['settings']['massActions']);
+    }
+
     public function testMassActionsRespectPermissionsAndHaveResolvedUrls(): void
     {
         $auth=$this->createMock(\Magento\Framework\AuthorizationInterface::class);

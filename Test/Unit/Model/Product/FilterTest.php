@@ -86,6 +86,26 @@ class FilterTest extends CompatibilityTestCase
         $this->assertSame('"Quoted", café, 東京', $this->model->cleanField('&quot;Quoted&quot;, café&#44; 東京'));
     }
 
+    /** @dataProvider unclosedMarkup */
+    #[DataProvider('unclosedMarkup')]
+    public function testUnclosedMarkupFragmentsAreRemoved(string $input, string $expected): void
+    {
+        $this->model->setFeed($this->feedMock);
+        self::assertSame($expected, $this->model->cleanField($input));
+    }
+
+    public static function unclosedMarkup(): array
+    {
+        return [
+            ['Description <img src=x onerror=alert(1)//', 'Description'],
+            ['Description &lt;img src=x', 'Description'],
+            ['Description <script src=x', 'Description'],
+            ['Description <img', 'Description'],
+            ['Description <img src="broken <b>Following text</b>', 'Description Following text'],
+            ['Size 5 < 10 and 20 > 15', 'Size 5 < 10 and 20 > 15'],
+        ];
+    }
+
     public function testEnclosedCustomDelimiterSurvivesCleaning(): void
     {
         $settings = ['output_params_delimiter' => '|', 'output_params_enclose_cell' => '"'];

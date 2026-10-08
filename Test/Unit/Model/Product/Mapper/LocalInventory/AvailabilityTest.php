@@ -68,6 +68,34 @@ class AvailabilityTest extends TestCase
         return [[0, 1, 'out_of_stock'], [10, 1, 'in_stock'], [10, 0, 'out_of_stock']];
     }
 
+    public function testLocalQuantityAndAvailabilityIgnoreStockLevelReservations(): void
+    {
+        $product = $this->createMock(Product::class);
+        $product->method('getSku')->willReturn('SKU');
+        $feed = $this->createMock(Feed::class);
+        $feed->method('getConfig')->willReturn(true);
+        $adapter = $this->createMock(AdapterAbstract::class);
+        $adapter->method('getFeed')->willReturn($feed);
+        $adapter->method('getProduct')->willReturn($product);
+        $adapter->method('getData')->with('inventory_source_item')->willReturn(
+            new DataObject(['quantity' => 1, 'status' => 1, 'source_code' => 'local'])
+        );
+        $filter = $this->createMock(\MageOS\ShoppingFeed\Model\Product\Filter::class);
+        $filter->method('cleanField')->willReturnArgument(0);
+        $adapter->method('getFilter')->willReturn($filter);
+        $api = $this->createMock(Api::class);
+        $api->expects(self::never())->method('getReservations');
+        $quantity = new \MageOS\ShoppingFeed\Model\Product\Mapper\LocalInventory\Simple\Quantity(
+            $this->createMock(Logger::class), $api
+        );
+        $quantity->addAdapter($adapter);
+        self::assertSame('1', $quantity->map());
+        $availability = new Availability($this->createMock(Logger::class), $this->createMock(Status::class),
+            $api, $this->createMock(StockRegistryProvider::class));
+        $availability->addAdapter($adapter);
+        self::assertSame('in_stock', $availability->getStockStatus($adapter));
+    }
+
     /** @dataProvider sourceCases */
     #[DataProvider('sourceCases')]
     public function testConfigurableParentHonorsChildStatusAtTheCurrentSource(

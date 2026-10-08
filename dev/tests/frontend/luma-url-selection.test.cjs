@@ -12,7 +12,8 @@ function fixture(hash, configurable = false) {
     ] };
     const radio = { id: 'options-13-list', children: [{ tag: 'input', type: 'radio', value: '130', checked: false }] };
     const swatch = { 'attribute-id': '14', children: [{ tag: '.swatch-option', 'option-id': '140', events: [] }] };
-    const nodes = [dropdown, radio, swatch];
+    const form = { id: 'product_addtocart_form', listeners: {} };
+    const nodes = [dropdown, radio, swatch, form];
     const selectors = [];
     function wrap(items) {
         return {
@@ -36,9 +37,23 @@ function fixture(hash, configurable = false) {
                 if (value === undefined) return items[0]?.value;
                 items.forEach(item => { item.value = value; }); return this;
             },
-            on() { return this; },
+            on(events, selector, callback) {
+                const listener = callback || selector;
+                for (const event of events.split(' ')) {
+                    items.forEach(item => { (item.listeners ||= {})[event] = listener; });
+                }
+                return this;
+            },
             first() { return wrap(items.slice(0, 1)); },
-            trigger(event) { items.forEach(item => { (item.events ||= []).push(event); }); return this; }
+            trigger(event) {
+                items.forEach(item => {
+                    (item.events ||= []).push(event);
+                    for (const [name, listener] of Object.entries(item.listeners || {})) {
+                        if (name === event || name.startsWith(event + '.')) listener.call(item);
+                    }
+                });
+                return this;
+            }
         };
     }
     function $(target) {
@@ -46,7 +61,7 @@ function fixture(hash, configurable = false) {
         selectors.push(target);
         if (target === '.super-attribute-select') return wrap([dropdown]);
         if (target === '.swatch-attribute') return wrap([swatch]);
-        if (/^#(?:select_\d+|options-\d+-list)$/.test(target)) return wrap(nodes.filter(n => n.id === target.slice(1)));
+        if (target === '#product_addtocart_form' || /^#(?:select_\d+|options-\d+-list)$/.test(target)) return wrap(nodes.filter(n => n.id === target.slice(1)));
         throw new Error('Invalid selector: ' + target);
     }
     $.each = (values, callback) => Object.entries(values).forEach(([key, value]) => callback(key, value));
@@ -66,7 +81,7 @@ function fixture(hash, configurable = false) {
     vm.runInContext(readFileSync(path.join(root, configurable
         ? 'view/frontend/web/js/configurable/selection.js'
         : 'view/frontend/web/js/autoselect/simple.js'), 'utf8'), context);
-    return { dropdown, radio, swatch, selectors, run() {
+    return { dropdown, radio, swatch, selectors, initialize(event) { wrap([form]).trigger(event); }, run() {
         if (configurable) return new exported({ attributes: {}, index: {}, optionPrices: {} });
         widget.values = {};
         widget._parseQueryParams(hash.slice(1));
@@ -104,4 +119,27 @@ test('Luma configurable ignores selector fragments and malformed URL encoding', 
         assert.equal(page.dropdown.value, '');
         assert.deepEqual(page.swatch.children[0].events, []);
     }
+});
+
+test('Luma configurable selects URL options after native options initialize', () => {
+    const page = fixture('#12=121', true);
+    const options = page.dropdown.children;
+    page.dropdown.children = [];
+    page.run();
+    assert.equal(page.dropdown.value, '');
+
+    page.dropdown.children = options;
+    page.initialize('configurable.initialized');
+    assert.equal(page.dropdown.value, '121');
+    assert.deepEqual(page.dropdown.events, ['change']);
+});
+
+test('Luma configurable selects URL swatches after native swatches initialize', () => {
+    const page = fixture('#14=140', true);
+    const options = page.swatch.children;
+    page.swatch.children = [];
+    page.run();
+    page.swatch.children = options;
+    page.initialize('swatch.initialized');
+    assert.deepEqual(options[0].events, ['click']);
 });

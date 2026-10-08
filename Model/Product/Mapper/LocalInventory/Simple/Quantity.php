@@ -31,13 +31,6 @@ class Quantity extends \MageOS\ShoppingFeed\Model\Product\Mapper\Generic\Simple\
 
         $cell = $sourceItem->getQuantity();
 
-        if ($this->getAdapter()->getFeed()->getConfig('general_use_stock_reservations')) {
-            $reservationCount = $this->sourceInventoryApi->getReservations(
-                $this->getAdapter()->getProduct()->getSku(), $sourceItem->getSourceCode()
-            );
-            $cell += $reservationCount;
-        }
-
         return $this->getAdapter()->getFilter()->cleanField(
             sprintf('%d', $cell >= 0 ? $cell : 0),
             $params

@@ -122,6 +122,12 @@ class Filter
      */
     private function removeMarkup(string $field): string
     {
+        // Discard unfinished tags before stripping later complete tags, preserving their text.
+        $field = preg_replace(
+            '~</?[a-z][a-z0-9:-]*(?=[\s/>]|$)[^<>]*(?=</?[a-z][a-z0-9:-]*(?=[\s/>]|$)|$)~i',
+            ' ',
+            $field
+        );
         $field = preg_replace('~<(script|style)\b[^>]*>.*?(?:</\1\s*>|$)~is', ' ', $field);
         $tags = <<<'REGEX'
 ~

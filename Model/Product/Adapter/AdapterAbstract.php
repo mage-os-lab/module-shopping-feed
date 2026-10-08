@@ -481,24 +481,27 @@ class AdapterAbstract extends \Magento\Framework\DataObject
     {
         $stockQty = 0;
         if ($this->sourceInventoryApi->getAllItems($this->product)) {
-            $sourceItems = $this->sourceInventoryApi->getItems($this->product, $this->feed->getStore()->getWebsite()->getCode());
+            $websiteCode = $this->feed->getStore()->getWebsite()->getCode();
+            $sourceItems = $this->sourceInventoryApi->getItems($this->product, $websiteCode);
             foreach ($sourceItems as $item) {
-                if ($sourceCode && $item->getSourceCode() != $sourceCode) {
+                if (!$item->getStatus() || ($sourceCode !== null && $item->getSourceCode() != $sourceCode)) {
                     continue;
                 }
-                $stockQty += (int)$item->getQuantity();
-                if ($this->getFeed()->getConfig('general_use_stock_reservations')) {
-                    $reservationCount = $this->sourceInventoryApi->getReservations(
-                        $this->getProduct()->getSku(), $item->getSourceCode()
-                    );
-                    $stockQty += $reservationCount;
-                }
+                $stockQty += (float)$item->getQuantity();
+            }
+            // Reservations belong to the website stock, never to an individual physical source.
+            if ($sourceCode === null && $this->getFeed()->getConfig('general_use_stock_reservations')) {
+                $stockQty += $this->sourceInventoryApi->getReservations(
+                    $this->getProduct()->getSku(), null, $websiteCode
+                );
             }
         } else {
             $stockState = $this->stockState;
             $stockQty = $stockState->getStockQty($this->product->getId(), $this->feed->getStore()->getWebsiteId());
             if ($this->getFeed()->getConfig('general_use_stock_reservations')) {
-                $reservationCount = $this->sourceInventoryApi->getReservations($this->getProduct()->getSku());
+                $reservationCount = $this->sourceInventoryApi->getReservations(
+                    $this->getProduct()->getSku(), null, $this->feed->getStore()->getWebsite()->getCode()
+                );
                 $stockQty += $reservationCount;
             }
         }

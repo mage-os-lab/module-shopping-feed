@@ -98,6 +98,15 @@
   <type name="Magento\Framework\Pricing\Render\Amount">
     <plugin name="MageOS_ShoppingFeed::microdataRemover" type="MageOS\ShoppingFeed\Plugin\MicrodataRemoverPlugin" sortOrder="100" disabled="false"/>
   </type>
+  <type name="Magento\Theme\Block\Html\Title">
+    <plugin name="MageOS_ShoppingFeed::microdataRemover" type="MageOS\ShoppingFeed\Plugin\MicrodataRemoverPlugin" sortOrder="100"/>
+  </type>
+  <type name="Magento\Catalog\Block\Product\View\Description">
+    <plugin name="MageOS_ShoppingFeed::microdataRemover" type="MageOS\ShoppingFeed\Plugin\MicrodataRemoverPlugin" sortOrder="100"/>
+  </type>
+  <type name="MageOS\ShoppingFeed\Model\Generator">
+    <plugin name="MageOS_ShoppingFeed::promotionCacheBatch" type="MageOS\ShoppingFeed\Plugin\PromotionCacheBatch"/>
+  </type>
   <type name="MageOS\ShoppingFeed\Model\Feed">
     <plugin name="MageOS_ShoppingFeed::uniqueUseMicrodata" type="MageOS\ShoppingFeed\Plugin\FeedUseMicrodataUniqueByStore" sortOrder="110" disabled="false"/>
   </type>

@@ -15,6 +15,43 @@ use PHPUnit\Framework\TestCase;
 #[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class MicrodataRemoverPluginTest extends TestCase
 {
+    #[DataProvider('titleAndSkuCases')]
+    public function testNativeTitleAndSkuArePreservedWithoutAReplacementFeed(
+        string $name,
+        bool $selected,
+        string $attribute,
+        string $expected
+    ): void {
+        $config = $this->createMock(ScopeConfigInterface::class);
+        $config->method('getValue')->willReturn(true);
+        $store = $this->createMock(Store::class);
+        $store->method('getId')->willReturn(2);
+        $stores = $this->createMock(StoreManagerInterface::class);
+        $stores->method('getStore')->willReturn($store);
+        $collection = $this->createMock(Collection::class);
+        $collection->method('addFieldToFilter')->willReturnSelf();
+        $collection->method('getSize')->willReturn($selected ? 1 : 0);
+        $factory = $this->createMock(CollectionFactory::class);
+        $factory->method('create')->willReturn($collection);
+        $plugin = new MicrodataRemoverPlugin($config, $factory, $stores);
+        $subject = $this->getMockBuilder(\Magento\Framework\View\Element\Template::class)
+            ->disableOriginalConstructor()->onlyMethods([])->getMock();
+        $subject->setNameInLayout($name)->setData($attribute, 'itemprop="native"');
+        $plugin->beforeToHtml($subject);
+        self::assertSame($expected, $subject->getData($attribute));
+    }
+
+    public static function titleAndSkuCases(): array
+    {
+        return [
+            ['page.main.title', false, 'add_base_attribute', 'itemprop="native"'],
+            ['product.info.sku', false, 'add_attribute', 'itemprop="native"'],
+            ['page.main.title', true, 'add_base_attribute', ''],
+            ['product.info.sku', true, 'add_attribute', ''],
+            ['product.info.description', true, 'add_attribute', 'itemprop="native"'],
+        ];
+    }
+
     public static function settings(): array
     {
         return [[true, false, true], [true, true, false], [false, true, true]];

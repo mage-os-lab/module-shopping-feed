@@ -108,6 +108,29 @@ class GeneratorTest extends TestCase
         $this->assertSame('no_code', $line[8]);
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('promotionTitles')]
+    public function testPromotionTitleCannotBreakTsvRows(array $row, string $expected): void
+    {
+        $rule = $this->getMockBuilder(\Magento\SalesRule\Model\Rule::class)
+            ->disableOriginalConstructor()->onlyMethods([])->getMock();
+        $rule->setData('name', "Default\t offer\nname");
+        $line = $this->invoke('createFeedLine', [1, $rule, $this->createMock(Map::class), $row]);
+        self::assertSame($expected, $line[2]);
+        self::assertCount(11, explode("\t", implode("\t", $line)));
+        self::assertStringNotContainsString("\n", implode("\t", $line));
+        self::assertStringNotContainsString("\r", implode("\t", $line));
+    }
+
+    public static function promotionTitles(): array
+    {
+        return [
+            [['title' => "Summer\t offer\r\nnow"], 'Summer offer now'],
+            [[], 'Default offer name'],
+            [['title' => null], 'Default offer name'],
+            [['title' => 'Café 東京'], 'Café 東京'],
+        ];
+    }
+
     public function testPromotionFileIsReplacedAtomically(): void
     {
         $file = '/magento/pub/media/mageos-shopping-feed/promotions.txt';

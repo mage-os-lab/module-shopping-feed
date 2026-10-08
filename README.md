@@ -27,6 +27,8 @@ The package has its own Composer name, PHP namespace, Magento module name, datab
 
 Version [1.2.2](https://github.com/mage-os-lab/module-shopping-feed/releases/tag/v1.2.2) is the current stable release. Its [verification record](docs/reviews/2026-10-05-release-1.2.2-preparation.md) separates local checks, merged-runtime CI, and publication. Existing Rocket Web installations are not migrated automatically. Read [MIGRATION.md](MIGRATION.md) and the [migration companion guide](docs/wiki/Rocket-Web-Migration.md) before evaluating it on a store that already uses Rocket Shopping Feeds.
 
+Unreleased hardening corrects website-stock reservations, physical-source Local Inventory quantities, promotion persistence and caching, and several Admin and storefront edge cases. The [Mage-OS 3.5.0 review](docs/reviews/2026-10-08-hardening-and-mageos-3.5-verification.md) records the local checks and remaining limits. These changes are not part of the published 1.2.2 package.
+
 Version 1.2.0 makes Magento UI Component forms the default for New/Edit Feed and Test Feed. It retains the existing schema and save routes, but changes the editor customization API. See the [Admin form guide](docs/wiki/Admin-UI-Component-Forms.md) and [developer migration guide](docs/ui-component-editor.md).
 
 The 1.2.0 runtime was accepted at `133af71` on `mageos-latest`. It includes the UI Component forms, permission-filtered grid, preview repairs, feed-controlled stock selection, configurable Local Inventory corrections, store-scoped frontend settings, and preservation of existing feeds' effective currency. The [extended local acceptance record](docs/reviews/2026-10-03-local-acceptance.md) is the current source for results and remaining checks. All eight presets passed save/reopen and unchanged-save/output comparisons in the [earlier Mage-OS deployment](docs/reviews/2026-10-02-mageos-latest-deployment-acceptance.md) and [Magento 2.4.8/2.4.9 Docker run](docs/reviews/2026-10-02-magento-docker-acceptance.md). The final PHP suite passes 809 tests on all three frameworks; both Docker versions pass 21 official integration tests and production compilation. Nebula remains disabled on `mageos-latest`.
@@ -46,7 +48,7 @@ Run [ACCEPTANCE-TEST-PLAN.md](ACCEPTANCE-TEST-PLAN.md) against the exact release
 
 Magento Open Source 2.4.7-p10 passes the dedicated compatibility profile and local eight-preset Admin/output acceptance. Its upstream Flysystem dependency remains affected by a security advisory. See the [2.4.7-p10 guidance](docs/compatibility/magento-2.4.7-p10.md) and [acceptance record](docs/reviews/2026-10-03-magento-247-acceptance.md) for the tested scope, scoped CI exception, and optional tested backport. The module does not weaken a store's Composer security settings.
 
-Mage-OS 3.4.0, based on Magento Open Source 2.4.9, is an explicit CI compatibility target. Its production checks install the package into a Mage-OS 3.4.0 project, then run the unit and integration suites, Magento coding standard, and dependency-injection compilation.
+The unreleased CI configuration targets Mage-OS 3.5.0, based on Magento Open Source 2.4.9. Its production checks install the package into a Mage-OS 3.5.0 project, then run the unit and integration suites, Magento coding standard, and dependency-injection compilation. Check the workflow run for the exact commit before treating the prepared target as CI acceptance.
 
 Mage-OS 3.5.0 on PHP 8.4.24 was also verified locally on Magebox with Hyva: a complete 160-row storefront feed, all exported prices and stock values, and all 38 available configurable deep links passed the recorded checks. This local evidence is separate from CI and Merchant Center acceptance.
 
@@ -137,7 +139,7 @@ Run the imported and modernized unit suite with the PHPUnit installation from th
 MAGENTO_ROOT=/path/to/magento /path/to/magento/vendor/bin/phpunit -c phpunit.xml.dist
 ```
 
-The unit-test bootstrap loads Magento's test framework and the module directly, so the module does not need to be installed in the validation checkout. CI also installs the package into currently supported Magento Open Source releases and explicitly into Mage-OS 3.4.0, runs the unit and integration suites, checks the Magento coding standard, and compiles dependency injection.
+The unit-test bootstrap loads Magento's test framework and the module directly, so the module does not need to be installed in the validation checkout. The prepared CI configuration also installs the package into currently supported Magento Open Source releases and explicitly into Mage-OS 3.5.0, runs the unit and integration suites, checks the Magento coding standard, and compiles dependency injection.
 
 ## Provenance and license
 

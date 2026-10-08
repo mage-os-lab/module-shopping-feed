@@ -410,13 +410,15 @@ class Generator extends DataObject
             if (!$this->batch->isEnabled()) {
                 $this->getLogger()->warning('Automatic switch to batch mode.');
 
-                // Persist batch state in the schedule
+                // Manual feeds may have no schedules; their queue still stores the checkpoint.
                 $schedules = $this->feed->getSchedules();
-                $schedules[0]['batch_mode'] = 1;
-                $schedules[0]['batch_limit'] = $newLimit;
-                $schedule = $this->scheduleFactory->create()->load($schedules[0]['id']);
-                $schedule->setData($schedules[0]);
-                $schedule->save();
+                if (!empty($schedules[0]['id'])) {
+                    $schedules[0]['batch_mode'] = 1;
+                    $schedules[0]['batch_limit'] = $newLimit;
+                    $schedule = $this->scheduleFactory->create()->load($schedules[0]['id']);
+                    $schedule->setData($schedules[0]);
+                    $schedule->save();
+                }
 
                 // Persist batch state, will be saved in the queue messages
                 $this->batch->setData(

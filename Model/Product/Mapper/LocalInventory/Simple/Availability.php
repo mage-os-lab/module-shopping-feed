@@ -40,13 +40,6 @@ class Availability extends \MageOS\ShoppingFeed\Model\Product\Mapper\Generic\Sim
             return self::OUT_OF_STOCK;
         }
         $qty = $sourceItem->getQuantity();
-        if ($this->getAdapter()->getFeed()->getConfig('general_use_stock_reservations')) {
-            $reservationCount = $this->sourceInventoryApi->getReservations(
-                $this->getAdapter()->getProduct()->getSku(), $sourceItem->getSourceCode()
-            );
-            $qty += $reservationCount;
-        }
-
         if ($qty > 0) {
             $cell = self::IN_STOCK;
         }

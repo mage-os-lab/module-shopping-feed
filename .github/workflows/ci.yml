@@ -74,11 +74,10 @@ jobs:
         run: |
           matrix=$(jq -c 'del(.magento[] | select(. == "magento/project-community-edition:2.4.7-p10")) | del(.include[] | select(.magento == "magento/project-community-edition:2.4.7-p10"))' <<< "$PLATFORM_MATRIX")
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
-      # The upstream matrix action does not yet list Mage-OS 3.4.0. Keep the
-      # production compatibility target explicit until upstream catches up.
-      - name: Load Mage-OS 3.4.0 matrix
+      # Keep the latest Mage-OS release explicit while the upstream matrix lags.
+      - name: Load Mage-OS 3.5.0 matrix
         id: mageos
-        run: echo "matrix=$(jq -c . .github/matrices/mageos-3.4.0.json)" >> "$GITHUB_OUTPUT"
+        run: echo "matrix=$(jq -c . .github/matrices/mageos-3.5.0.json)" >> "$GITHUB_OUTPUT"
 
   check-magento:
     name: Magento Open Source production checks
@@ -92,7 +91,7 @@ jobs:
       composer_auth: ${{ secrets.COMPOSER_AUTH }}
 
   check-mageos:
-    name: Mage-OS 3.4.0 production checks
+    name: Mage-OS 3.5.0 production checks
     needs: compute-platform-matrix
     uses: graycoreio/github-actions-magento2/.github/workflows/check-extension.yaml@a65d0e50647829a9f6f972d72d87054a9c848fe0 # v8.9.0
     with:
