@@ -108,6 +108,7 @@ class GeneratorTest extends TestCase
         $this->assertSame('no_code', $line[8]);
     }
 
+    /** @dataProvider promotionTitles */
     #[\PHPUnit\Framework\Attributes\DataProvider('promotionTitles')]
     public function testPromotionTitleCannotBreakTsvRows(array $row, string $expected): void
     {

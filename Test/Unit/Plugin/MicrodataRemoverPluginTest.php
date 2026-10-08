@@ -15,6 +15,7 @@ use PHPUnit\Framework\TestCase;
 #[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class MicrodataRemoverPluginTest extends TestCase
 {
+    /** @dataProvider titleAndSkuCases */
     #[DataProvider('titleAndSkuCases')]
     public function testNativeTitleAndSkuArePreservedWithoutAReplacementFeed(
         string $name,
