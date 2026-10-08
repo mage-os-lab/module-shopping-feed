@@ -2,6 +2,8 @@
 
 Date: 2026-10-08. Base: `e58d93b2e402afe1061a39b2b05f9d5d69c15e4d` (1.2.2, `main`). This record covers local verification before commit and remote CI.
 
+Subsequent commit, remote CI, and native Hyvä/Nebula results are recorded in the [CI and native theme follow-up](2026-10-08-remote-ci-and-native-theme-acceptance.md). The completion states below preserve this earlier verification phase.
+
 Eleven of the thirteen findings in the supplied `2026-10-08-codebase-review.md` are addressed. Two informational findings remain unchanged for the reasons below. Native Mage-OS testing also exposed feed construction, promotion persistence, state-saving, and configurable initialization defects; those are corrected in this change. The supplied review file is preserved outside this commit.
 
 Mage-OS [lists 3.5.0 as its latest release](https://mage-os.org/product/releases/). The [3.5.0 release announcement](https://mage-os.org/releases/2026-09-08-mage-os-3-5-0-release/) identifies its Magento Open Source 2.4.9 base. This review used an isolated 3.5.0 installation and the final module source, rather than inferring compatibility from the upstream version.

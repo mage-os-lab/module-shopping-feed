@@ -28,6 +28,11 @@ class NebulaDefinition
             return [$route, $params];
         }
         if ($route === '*/*/*') {
+            // Nebula omits active column filters from pagination and sort links.
+            // A supplied null remains the explicit clear-filters action.
+            if (!array_key_exists('filters', $params)) {
+                $params['filters'] = $subject->getActiveFilters();
+            }
             // Nebula's controls update query parameters. Path parameters would take precedence.
             foreach (['sort', 'dir', 'page', 'pageSize', 'search', 'filters'] as $key) {
                 if (array_key_exists($key, $params)) {

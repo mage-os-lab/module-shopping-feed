@@ -7,6 +7,50 @@ use PHPUnit\Framework\TestCase;
 
 class NebulaDefinitionTest extends TestCase
 {
+    public function testGridNavigationPreservesActiveColumnFilters(): void
+    {
+        $subject = new class {
+            public function getGridId(): string
+            {
+                return 'mageos_shopping_feed_grid';
+            }
+
+            public function getActiveFilters(): array
+            {
+                return ['name' => 'Native page fixture', 'status' => '0'];
+            }
+        };
+        $plugin = new NebulaDefinition($this->createStub(\Magento\Framework\AuthorizationInterface::class));
+        foreach ([['page' => 2], ['sort' => 'name', 'dir' => 'asc'], ['pageSize' => 50]] as $navigation) {
+            [$route, $params] = $plugin->beforeGetUrl($subject, '*/*/*', $navigation);
+            self::assertSame('*/*/*', $route);
+            self::assertSame($subject->getActiveFilters(), $params['_query']['filters'] ?? null);
+            foreach ($navigation as $key => $value) {
+                self::assertSame($value, $params['_query'][$key]);
+            }
+        }
+    }
+
+    public function testGridNavigationRetainsExplicitFilterOverrides(): void
+    {
+        $subject = new class {
+            public function getGridId(): string
+            {
+                return 'mageos_shopping_feed_grid';
+            }
+
+            public function getActiveFilters(): array
+            {
+                throw new \LogicException('Explicit filters must not be replaced.');
+            }
+        };
+        $plugin = new NebulaDefinition($this->createStub(\Magento\Framework\AuthorizationInterface::class));
+        foreach ([null, [], ['name' => 'Replacement']] as $filters) {
+            [, $params] = $plugin->beforeGetUrl($subject, '*/*/*', ['filters' => $filters]);
+            self::assertSame($filters, $params['_query']['filters']);
+        }
+    }
+
     public function testThirdPartyMassActionWithoutAclIsOmitted(): void
     {
         $authorization = $this->createMock(\Magento\Framework\AuthorizationInterface::class);

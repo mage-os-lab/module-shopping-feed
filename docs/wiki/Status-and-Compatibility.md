@@ -35,9 +35,9 @@ The package currently declares:
 * Magento cron for scheduled queue creation and processing
 * Magento Inventory APIs for source-level Local Inventory output
 
-Mage-OS 3.4.0 is an explicit CI target. CI also installs the module into supported Magento Open Source projects, runs unit and integration tests, checks Magento coding standards, and compiles dependency injection.
+The unreleased hardening branch adds Mage-OS 3.5.0 as an explicit CI target. CI also installs the module into supported Magento Open Source projects, runs unit and integration tests, checks Magento coding standards, and compiles dependency injection. See the [CI and native theme record](https://github.com/mage-os-lab/module-shopping-feed/blob/feat/mageos-3.5-hardening/docs/reviews/2026-10-08-remote-ci-and-native-theme-acceptance.md) and verify the workflow's exact head SHA when evaluating a candidate.
 
-Mage-OS 3.5.0 on PHP 8.4.24 was verified locally on Magebox with Hyva, including full-store Google Shopping generation, price and stock comparisons, and configurable deep links. See [Release 1.0.0](Release-1-0-0) for the exact scope and limits. Mage-OS 3.5.0 is a local acceptance profile, not an additional CI matrix entry.
+Mage-OS 3.5.0 on PHP 8.4.24 was also verified locally on Magebox with Hyva, including full-store Google Shopping generation, price and stock comparisons, and configurable deep links. See [Release 1.0.0](Release-1-0-0) for that historical scope and its limits. The October 8 hardening candidate has separate PHP 8.4.26, Hyvä 1.5.2, and Nebula 0.9.0 acceptance evidence.
 
 Compatibility in CI is not a production acceptance result. Test the exact module commit against a representative store, catalog, inventory setup, and external destination before enabling production schedules or uploads.
 
