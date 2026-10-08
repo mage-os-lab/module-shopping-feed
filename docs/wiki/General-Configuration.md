@@ -2,7 +2,7 @@
 
 General Configuration defines the store context, output location, delimiter, price behavior, and stock behavior for one feed.
 
-> Documentation baseline: release 1.2.1 (`v1.2.1`); earlier acceptance is identified by version. Last reviewed: 2026-10-04.
+> Documentation baseline: release 1.2.1 (`v1.2.1`); earlier acceptance is identified by version. Last reviewed: 2026-10-07. The version-display correction below is unreleased.
 
 The 1.2.0 editor labels this section **General**. Its [Admin form guide](Admin-UI-Component-Forms) covers save controls, store-view reloads, and current acceptance results and limits.
 
@@ -66,7 +66,7 @@ Open **Stores > Configuration > Mage-OS > Mage-OS Shopping Feed**.
 
 ### General Info
 
-* **Versions installed** reports the module version information available to the Admin.
+* **Versions installed** reports the module version information available to the Admin. The unreleased fix for [issue #17](https://github.com/mage-os-lab/module-shopping-feed/issues/17) displays the installed `mage-os/module-shopping-feed` Composer package version. Source installations under `app/code`, or packages without a known Composer version, fall back to the database schema version. That fallback can remain `1.0.0` across package releases.
 * **Cron Enabled** controls the module's scheduled queue creation and processing. Direct CLI commands still work when module cron is disabled.
 
 ### Log Settings

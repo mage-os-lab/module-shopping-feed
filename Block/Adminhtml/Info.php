@@ -17,6 +17,8 @@
  */
 namespace MageOS\ShoppingFeed\Block\Adminhtml;
 
+use Composer\InstalledVersions;
+
 class Info extends \Magento\Config\Block\System\Config\Form\Field
 {
     /**
@@ -70,9 +72,38 @@ class Info extends \Magento\Config\Block\System\Config\Form\Field
         $html = '<ul style="list-style-type: none; margin-top: 7px;">';
         foreach ($this->_moduleList->getNames() as $moduleName) {
             if (strpos($moduleName, 'MageOS_ShoppingFeed') !== false) {
-                $html .= '<li>'. $moduleName. ' v'. $this->_moduleResource->getDbVersion($moduleName). '</li>';
+                $version = $this->getModuleVersion($moduleName);
+                $label = $moduleName;
+                if ($version !== '') {
+                    $label .= ' ' . $version;
+                }
+                $html .= '<li>' . $this->escapeHtml($label) . '</li>';
             }
         }
         return $html . '</ul>';
+    }
+
+    /**
+     * Read the installed package version, falling back to the module's schema version.
+     *
+     * @param string $moduleName
+     * @return string
+     */
+    private function getModuleVersion(string $moduleName): string
+    {
+        $version = null;
+        if ($moduleName === 'MageOS_ShoppingFeed'
+            && class_exists(InstalledVersions::class)
+            && InstalledVersions::isInstalled('mage-os/module-shopping-feed')
+        ) {
+            $version = InstalledVersions::getPrettyVersion('mage-os/module-shopping-feed');
+        }
+        if ($version === null || $version === '') {
+            $version = (string)$this->_moduleResource->getDbVersion($moduleName);
+        }
+        if (preg_match('/^\d/', $version)) {
+            $version = 'v' . $version;
+        }
+        return $version;
     }
 }
